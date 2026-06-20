@@ -160,7 +160,7 @@ function M.setup_codelens_refresh(client, bufnr)
     group = group,
     buffer = bufnr,
     callback = function()
-      vim.lsp.codelens.refresh { bufnr = bufnr }
+      vim.lsp.codelens.enable(true, { bufnr = bufnr })
     end,
   })
 end
