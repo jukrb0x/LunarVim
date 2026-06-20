@@ -17,7 +17,7 @@ local function should_disable(opts, lang, buf)
   return disable == true
 end
 
-local function setup_native(opts)
+local function setup_main(opts)
   local status_ok, treesitter = pcall(require, "nvim-treesitter")
   if not status_ok then
     Log:error "Failed to load nvim-treesitter"
@@ -152,45 +152,8 @@ function M.config()
 end
 
 function M.setup()
-  -- avoid running in headless mode since it's harder to detect failures
-  if #vim.api.nvim_list_uis() == 0 then
-    Log:debug "headless mode detected, skipping running setup for treesitter"
-    return
-  end
-
-  local ts_status_ok, treesitter_configs = pcall(require, "nvim-treesitter.configs")
-  if not ts_status_ok then
-    Log:error "Failed to load nvim-treesitter.configs"
-    return
-  end
-
-  local status_ok, ts_context_commentstring = pcall(require, "ts_context_commentstring")
-  if not status_ok then
-    Log:error "Failed to load ts_context_commentstring"
-    return
-  end
-
   local opts = vim.deepcopy(lvim.builtin.treesitter)
-
-  if vim.fn.has "nvim-0.12" == 1 then
-    setup_native(opts)
-    return
-  end
-
-  -- handle deprecated API, https://github.com/JoosepAlviste/nvim-ts-context-commentstring/issues/82
-  ts_context_commentstring.setup(opts.context_commentstring)
-  opts.context_commentstring = nil
-
-  treesitter_configs.setup(opts)
-
-  if lvim.builtin.treesitter.on_config_done then
-    lvim.builtin.treesitter.on_config_done(treesitter_configs)
-  end
-
-  -- handle deprecated API, https://github.com/windwp/nvim-autopairs/pull/324
-  local ts_utils = require "nvim-treesitter.ts_utils"
-  ts_utils.is_in_node_range = vim.treesitter.is_in_node_range
-  ts_utils.get_node_range = vim.treesitter.get_node_range
+  setup_main(opts)
 end
 
 return M

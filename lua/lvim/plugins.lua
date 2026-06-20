@@ -1,6 +1,4 @@
 -- local require = require("lvim.utils.require").require
-local has_nvim_012 = vim.fn.has "nvim-0.12" == 1
-
 local core_plugins = {
   { "folke/lazy.nvim", tag = "stable" },
   {
@@ -130,15 +128,10 @@ local core_plugins = {
   -- Treesitter
   {
     "nvim-treesitter/nvim-treesitter",
-    branch = has_nvim_012 and "main" or "master",
+    commit = "4916d6592ede8c07973490d9322f187e07dfefac",
     build = ":TSUpdate",
-    lazy = not has_nvim_012,
+    lazy = false,
     config = function()
-      local utils = require "lvim.utils"
-      local path = utils.join_paths(get_runtime_dir(), "site", "pack", "lazy", "opt", "nvim-treesitter")
-      if not has_nvim_012 then
-        vim.opt.rtp:prepend(path) -- old nvim-treesitter needs to be before nvim's runtime in rtp
-      end
       require("lvim.core.treesitter").setup()
     end,
     cmd = {
@@ -148,7 +141,6 @@ local core_plugins = {
       "TSInstallFromGrammar",
       "TSLog",
     },
-    event = has_nvim_012 and nil or "User FileOpened",
   },
   {
     -- Lazy loaded by Comment.nvim pre_hook
@@ -376,7 +368,7 @@ end
 
 local get_default_sha1 = function(spec)
   local short_name = get_short_name(spec[1])
-  if has_nvim_012 and short_name == "nvim-treesitter" then
+  if short_name == "nvim-treesitter" then
     return nil
   end
   return default_sha1[short_name] and default_sha1[short_name].commit
@@ -385,7 +377,10 @@ end
 if not vim.env.LVIM_DEV_MODE then
   --  Manually lock the commit hashes of core plugins
   for _, spec in ipairs(core_plugins) do
-    spec["commit"] = get_default_sha1(spec)
+    local commit = get_default_sha1(spec)
+    if commit then
+      spec["commit"] = commit
+    end
   end
 end
 
