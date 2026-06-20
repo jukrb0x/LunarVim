@@ -17,6 +17,16 @@ local function should_disable(opts, lang, buf)
   return disable == true
 end
 
+local function remove_stale_plugin_parsers()
+  local plugin_dir = require("lvim.utils").join_paths(get_runtime_dir(), "site", "pack", "lazy", "opt", "nvim-treesitter")
+  for _, dir in ipairs { "parser", "parser-info" } do
+    local path = require("lvim.utils").join_paths(plugin_dir, dir)
+    if vim.fn.isdirectory(path) == 1 then
+      vim.fn.delete(path, "rf")
+    end
+  end
+end
+
 local function setup_main(opts)
   local status_ok, treesitter = pcall(require, "nvim-treesitter")
   if not status_ok then
@@ -25,8 +35,9 @@ local function setup_main(opts)
   end
 
   require("lvim.core.treesitter_compat").setup(opts)
+  remove_stale_plugin_parsers()
 
-  local install_dir = opts.parser_install_dir or (vim.fn.stdpath "data" .. "/site")
+  local install_dir = opts.parser_install_dir or require("lvim.utils").join_paths(get_runtime_dir(), "site")
   treesitter.setup { install_dir = install_dir }
 
   local ensure_installed = opts.ensure_installed

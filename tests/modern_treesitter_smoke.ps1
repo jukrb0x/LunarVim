@@ -92,6 +92,6 @@ if ($FileOutputText -notmatch "MODERN_TREESITTER_SMOKE_OK") {
     throw "File-open smoke test did not print success marker. See $Log"
 }
 
-if ($FileOutputText -match "nvim-treesitter\\.query.*not found|attempt to call method 'range'|Failed to source|E5108|define_modules") {
+if ($FileOutputText -match "nvim-treesitter\\.query.*not found|attempt to call method 'range'|Invalid field name|Failed to source|E5108|define_modules") {
     throw "File-open smoke test hit a treesitter compatibility error. See $Log"
 }
