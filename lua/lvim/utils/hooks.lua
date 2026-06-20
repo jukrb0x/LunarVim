@@ -65,7 +65,11 @@ function M.run_post_update()
   if not in_headless then
     vim.schedule(function()
       if package.loaded["nvim-treesitter"] then
-        vim.cmd [[ TSUpdateSync ]]
+        if vim.fn.exists ":TSUpdateSync" == 2 then
+          vim.cmd [[ TSUpdateSync ]]
+        else
+          vim.cmd [[ TSUpdate ]]
+        end
       end
       -- TODO: add a changelog
       vim.notify("Update complete", vim.log.levels.INFO)

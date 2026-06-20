@@ -44,11 +44,17 @@ function M.generate_ftplugin(server_name, dir)
 
   for _, filetype in ipairs(filetypes) do
     filetype = filetype:match "%.([^.]*)$" or filetype
+    if filetype:find("[*?<>|:\"]") then
+      goto continue
+    end
+
     local filename = join_paths(dir, filetype .. ".lua")
     local setup_cmd = string.format([[require("lvim.lsp.manager").setup(%q)]], server_name)
     -- print("using setup_cmd: " .. setup_cmd)
     -- overwrite the file completely
     utils.write_file(filename, setup_cmd .. "\n", "a")
+
+    ::continue::
   end
 end
 
@@ -60,12 +66,12 @@ function M.generate_templates(servers_names)
 
   Log:debug "Templates installation in progress"
 
-  M.remove_template_files()
-
   -- create the directory if it didn't exist
   if not utils.is_directory(lvim.lsp.templates_dir) then
     vim.fn.mkdir(ftplugin_dir, "p")
   end
+
+  M.remove_template_files()
 
   for _, server in ipairs(servers_names) do
     M.generate_ftplugin(server, ftplugin_dir)

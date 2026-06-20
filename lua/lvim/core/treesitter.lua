@@ -1,6 +1,62 @@
 local M = {}
 local Log = require "lvim.core.log"
 
+local function get_lang(buf)
+  local filetype = vim.bo[buf].filetype
+  return vim.treesitter.language.get_lang(filetype) or filetype
+end
+
+local function should_disable(opts, lang, buf)
+  local disable = opts.highlight and opts.highlight.disable
+  if type(disable) == "function" then
+    return disable(lang, buf)
+  end
+  if type(disable) == "table" then
+    return vim.tbl_contains(disable, lang)
+  end
+  return disable == true
+end
+
+local function setup_native(opts)
+  local status_ok, treesitter = pcall(require, "nvim-treesitter")
+  if not status_ok then
+    Log:error "Failed to load nvim-treesitter"
+    return
+  end
+
+  require("lvim.core.treesitter_compat").setup(opts)
+
+  local install_dir = opts.parser_install_dir or (vim.fn.stdpath "data" .. "/site")
+  treesitter.setup { install_dir = install_dir }
+
+  local ensure_installed = opts.ensure_installed
+  if type(ensure_installed) == "table" and #ensure_installed > 0 then
+    treesitter.install(ensure_installed)
+  end
+
+  if opts.highlight and opts.highlight.enable then
+    vim.api.nvim_create_autocmd("FileType", {
+      group = vim.api.nvim_create_augroup("lvim_treesitter", { clear = true }),
+      callback = function(args)
+        local lang = get_lang(args.buf)
+        if should_disable(opts, lang, args.buf) then
+          return
+        end
+
+        pcall(vim.treesitter.start, args.buf, lang)
+
+        if opts.indent and opts.indent.enable and not vim.tbl_contains(opts.indent.disable or {}, lang) then
+          vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+        end
+      end,
+    })
+  end
+
+  if lvim.builtin.treesitter.on_config_done then
+    lvim.builtin.treesitter.on_config_done(treesitter)
+  end
+end
+
 function M.config()
   lvim.builtin.treesitter = {
     on_config_done = nil,
@@ -115,6 +171,11 @@ function M.setup()
   end
 
   local opts = vim.deepcopy(lvim.builtin.treesitter)
+
+  if vim.fn.has "nvim-0.12" == 1 then
+    setup_native(opts)
+    return
+  end
 
   -- handle deprecated API, https://github.com/JoosepAlviste/nvim-ts-context-commentstring/issues/82
   ts_context_commentstring.setup(opts.context_commentstring)
