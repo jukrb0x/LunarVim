@@ -78,10 +78,10 @@
     "commit": "34160a7"
   },
   "nvim-lspconfig": {
-    "commit": "eadcee1"
+    "commit": "2eccb41"
   },
   "nvim-navic": {
-    "commit": "8649f69"
+    "commit": "f5eba19"
   },
   "nvim-tree.lua": {
     "commit": "2bc725a"

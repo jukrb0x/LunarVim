@@ -5,6 +5,18 @@ local fmt = string.format
 local lvim_lsp_utils = require "lvim.lsp.utils"
 local is_windows = vim.loop.os_uname().version:match "Windows"
 
+local function get_lspconfig_config(server_name)
+  local status_ok, config = pcall(require, "lspconfig.configs." .. server_name)
+  if status_ok then
+    return config
+  end
+
+  status_ok, config = pcall(require, "lspconfig.server_configurations." .. server_name)
+  if status_ok then
+    return config
+  end
+end
+
 local function resolve_mason_config(server_name)
   local found, mason_config = pcall(require, "mason-lspconfig.server_configurations." .. server_name)
   if not found then
@@ -74,8 +86,8 @@ local function launch_server(server_name, config)
   pcall(function()
     local command = config.cmd
       or (function()
-        local default_config = require("lspconfig.server_configurations." .. server_name).default_config
-        return default_config.cmd
+        local lspconfig_config = get_lspconfig_config(server_name)
+        return lspconfig_config and lspconfig_config.default_config.cmd
       end)()
     -- some servers have dynamic commands defined with on_new_config
     if type(command) == "table" and type(command[1]) == "string" and vim.fn.executable(command[1]) ~= 1 then

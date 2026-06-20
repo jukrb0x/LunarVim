@@ -3,6 +3,18 @@ local M = {}
 local tbl = require "lvim.utils.table"
 local Log = require "lvim.core.log"
 
+local function get_lspconfig_config(server_name)
+  local status_ok, config = pcall(require, ("lspconfig.configs.%s"):format(server_name))
+  if status_ok then
+    return config
+  end
+
+  status_ok, config = pcall(require, ("lspconfig.server_configurations.%s"):format(server_name))
+  if status_ok then
+    return config
+  end
+end
+
 function M.is_client_active(name)
   local clients = vim.lsp.get_clients()
   return tbl.find_first(clients, function(client)
@@ -43,8 +55,8 @@ end
 ---@param server_name string can be any server supported by nvim-lsp-installer
 ---@return string[] supported filestypes as a list of strings
 function M.get_supported_filetypes(server_name)
-  local status_ok, config = pcall(require, ("lspconfig.server_configurations.%s"):format(server_name))
-  if not status_ok then
+  local config = get_lspconfig_config(server_name)
+  if not config then
     return {}
   end
 
@@ -81,7 +93,7 @@ function M.setup_document_highlight(client, bufnr)
     return
   end
   local status_ok, highlight_supported = pcall(function()
-    return client.supports_method "textDocument/documentHighlight"
+    return client:supports_method "textDocument/documentHighlight"
   end)
   if not status_ok or not highlight_supported then
     return
@@ -114,7 +126,7 @@ end
 
 function M.setup_document_symbols(client, bufnr)
   vim.g.navic_silence = false -- can be set to true to suppress error
-  local symbols_supported = client.supports_method "textDocument/documentSymbol"
+  local symbols_supported = client:supports_method "textDocument/documentSymbol"
   if not symbols_supported then
     Log:debug("skipping setup for document_symbols, method not supported by " .. client.name)
     return
@@ -127,7 +139,7 @@ end
 
 function M.setup_codelens_refresh(client, bufnr)
   local status_ok, codelens_supported = pcall(function()
-    return client.supports_method "textDocument/codeLens"
+    return client:supports_method "textDocument/codeLens"
   end)
   if not status_ok or not codelens_supported then
     return
@@ -166,7 +178,7 @@ function M.format_filter(client)
 
   if #available_formatters > 0 then
     return client.name == "null-ls"
-  elseif client.supports_method "textDocument/formatting" then
+  elseif client:supports_method "textDocument/formatting" then
     return true
   else
     return false
