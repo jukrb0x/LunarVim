@@ -45,7 +45,7 @@
     "commit": "7a9d45d"
   },
   "lualine.nvim": {
-    "commit": "0a5a668"
+    "commit": "221ce6b"
   },
   "lunar.nvim": {
     "commit": "08bbc93"
@@ -63,10 +63,10 @@
     "commit": "d92035e"
   },
   "none-ls.nvim": {
-    "commit": "3a48266"
+    "commit": "01f8e62"
   },
   "nvim-autopairs": {
-    "commit": "c15de7e"
+    "commit": "7b9923a"
   },
   "nvim-cmp": {
     "commit": "5260e5e"
